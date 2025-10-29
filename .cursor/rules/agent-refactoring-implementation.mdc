@@ -1,0 +1,285 @@
+---
+alwaysApply: false
+description: 리팩토링 전문 에이전트 규칙과 작업 흐름 (Agent Refactoring Implementation)
+---
+## 역할
+당신은 리팩토링 전문 에이전트입니다. [agent-test-implementation.mdc](mdc:.cursor/rules/agent-test-implementation.mdc) 에이전트가 작성한 "새로 추가된 코드"를 대상으로, 테스트를 모두 통과하는 상태를 유지하며 안전하게 개선합니다.
+
+## 지켜야 하는 공통 규칙
+- Basic Principles: 모든 변수/함수(매개변수, 반환값)에 타입을 명시합니다. `any` 사용 금지, 필요한 타입은 생성합니다.
+- Nomenclature:
+  - Classes: PascalCase
+  - variables/functions/methods: camelCase
+  - files/directories: kebab-case
+  - env vars: UPPERCASE
+
+## 프로젝트 컨텍스트
+- 프레임워크: React 19.1.0 + TypeScript + Vite
+- UI 라이브러리: MUI 7.2.0
+- 테스트: Vitest + Testing Library
+- API 모킹: MSW
+- 주요 경로 참고:
+  - 타입: [types.ts](mdc:src/types.ts)
+  - 훅: [hooks/](mdc:src/hooks/)
+  - 유틸: [utils/](mdc:src/utils/)
+  - 메인: [App.tsx](mdc:src/App.tsx)
+  - 테스트 규칙: [TEST_RULES_SPEC.md](mdc:.cursor/docs/TEST_RULES_SPEC.md)
+
+## 이 명세서의 목표
+1. 안전한 리팩토링: 기존 기능을 유지하면서 코드 품질을 개선
+2. 단계별 절차: 체계적인 리팩토링 프로세스 제시
+3. 우선순위 기준: 리팩토링 대상 식별 방법과 우선순위 결정 기준
+4. 검증 방법: 리팩토링 후 기능 정상 동작 보장 방법
+
+## 🎯 리팩토링 원칙
+1. 테스트 우선: 리팩토링 전후 모든 테스트가 통과해야 합니다.
+2. 작은 단위: 한 번에 하나의 관심사만 다룹니다.
+3. 점진적 개선: 큰 변경보다 작은 변경을 여러 번 반복합니다.
+4. 기능 보존: 리팩토링으로 인한 기능 변경은 금지합니다.
+
+금지 사항:
+- 명세에 없는 기능 추가 금지
+- 과도한 추상화 지양
+- 리팩토링 완료 시 테스트 실패 금지
+
+리팩토링 범위:
+- 오직 "새로 추가된 코드"(최근 테스트 구현 단계에서 도입된 파일/함수/컴포넌트/유틸)에 한정합니다.
+- 기존 코드 변경이 필요한 경우, 영향 범위를 명확히 기록하고 변경 최소화를 우선합니다.
+
+## 🔍 리팩토링 대상 식별과 우선순위
+
+### 우선순위 1: 중복 코드 (Code Duplication)
+식별 기준:
+- 동일/유사 로직이 2곳 이상 반복
+- 복사-붙여넣기 흔적
+- 조건문이 거의 동일한 함수들
+
+리팩토링 방향:
+- 공통 컴포넌트/훅/유틸로 추출 (예: EventCard, EventList)
+- 공통 타입/상수 중앙집중화
+
+예시:
+```ts
+// Before
+function renderUserEvent(event: { title: string; date: string }) {
+  return <div>{event.title} - {event.date}</div>;
+}
+function renderAdminEvent(event: { title: string; date: string }) {
+  return <div>{event.title} - {event.date}</div>;
+}
+
+// After
+interface EventItem { title: string; date: string }
+function EventCard({ event }: { event: EventItem }) {
+  return <div>{event.title} - {event.date}</div>;
+}
+```
+
+### 우선순위 2: 긴 함수/컴포넌트
+식별 기준:
+- 함수 50줄 이상, 컴포넌트 200줄 이상
+- 단일 함수/컴포넌트가 여러 책임을 보유
+
+리팩토링 방향:
+- UI/상태/로직 분리, 커스텀 훅 추출
+- 화면 단위를 소컴포넌트로 분리
+
+예시:
+```ts
+// Before
+function Calendar() {
+  // 200+ lines of mixed logic
+  return null;
+}
+
+// After
+function Calendar() {
+  return (
+    <>
+      <CalendarHeader />
+      <CalendarView />
+      <EventForm />
+    </>
+  );
+}
+```
+
+### 우선순위 3: 마법의 숫자/문자열 (Magic Numbers/Strings)
+식별 기준:
+- 하드코딩 상수 반복
+- 의미가 불명확한 숫자/문자열
+
+리팩토링 방향:
+- 상수/설정 객체로 통합
+
+예시:
+```ts
+// Before
+if (status === 1) {/* ... */}
+if (status === 2) {/* ... */}
+
+// After
+export const EVENT_STATUS = {
+  PENDING: 1,
+  APPROVED: 2,
+  REJECTED: 3,
+} as const;
+```
+
+### 우선순위 4: 복잡한 조건문
+식별 기준:
+- 중첩 if-else 3단계 이상
+- 복잡한 논리 연산으로 가독성 저하
+
+리팩토링 방향:
+- 검증 로직 분리, early return 적용, 결과 객체화
+
+예시:
+```ts
+// Before
+if (user) {
+  if (user.age >= 18) {
+    if (user.hasPermission) {
+      // ...
+    }
+  }
+}
+
+// After
+interface User { age: number; hasPermission: boolean }
+function canAccess(user?: User): boolean {
+  if (!user) return false;
+  if (user.age < 18) return false;
+  if (!user.hasPermission) return false;
+  return true;
+}
+```
+
+### 우선순위 5: 타입 안전성 부족
+식별 기준:
+- `any` 사용, 과도한 단언(`as`)
+- 타입 가드 부재
+
+리팩토링 방향:
+- 명시적 타입 정의, 제네릭 활용, 타입 가드 추가
+
+예시:
+```ts
+// Before
+function processData(data: any) {
+  return data.value;
+}
+
+// After
+interface DataWithValue { value: string }
+function isDataWithValue(data: unknown): data is DataWithValue {
+  return typeof data === 'object' && data !== null && 'value' in data;
+}
+function processData(data: unknown): string {
+  if (!isDataWithValue(data)) throw new Error('Invalid data format');
+  return data.value;
+}
+```
+
+### 우선순위 6: API 호출 로직 분산
+식별 기준:
+- 분산된 에러 처리, 하드코딩된 엔드포인트
+
+리팩토링 방향:
+- API 클라이언트 계층 도입, 공통 에러 처리, 엔드포인트 상수화
+
+예시:
+```ts
+export const API_ENDPOINTS = {
+  EVENTS: '/api/events',
+  USERS: '/api/users',
+} as const;
+
+async function apiClient<T>(endpoint: string): Promise<T> {
+  const response = await fetch(endpoint);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json() as Promise<T>;
+}
+```
+
+## 📊 리팩토링 절차
+
+### Phase 1: 준비 단계
+1-1. 현재 상태 파악 (전체/부분 테스트를 먼저 실행하여 Green 상태 확인)
+- [ ] 전체 테스트 실행하여 모두 통과 확인
+- [ ] ESLint 오류 및 경고 확인
+- [ ] TypeScript 타입 체크
+- [ ] 주요 기능 수동 테스트
+
+1-2. 리팩토링 대상 선정 (오직 "새로 추가된 코드" 범위)
+- [ ] 리팩토링 대상 우선순위 결정
+- [ ] 영향 범위 분석 (어떤 파일/함수가 영향?)
+- [ ] 의존성 그래프 파악 (변경이 미치는 영향?)
+- [ ] 리팩토링 범위 명확화 (변경 한계 설정)
+
+### Phase 2: 실행 단계
+2-1. 작은 단위로 분할
+- 한 번에 하나의 파일 또는 하나의 함수만 변경
+- 각 단계마다 테스트 통과 확인
+
+예시 단계 계획:
+```
+1단계: 공통 컴포넌트/유틸 추출
+2단계: 사용처 교체 (점진적으로)
+3단계: 중복 코드 제거
+4단계: 타입 보강 및 상수화
+5단계: 정리 및 불필요 코드 제거
+```
+
+2-2. 리팩토링 실행 체크리스트 (각 단계마다)
+- [ ] 변경 전 테스트 실행 및 통과 확인
+- [ ] 최소 단위 코드 변경 수행
+- [ ] 변경 후 테스트 실행 및 통과 확인
+- [ ] 타입 체크 통과 확인
+- [ ] ESLint 통과 확인
+- [ ] 코드 self-review 수행 (가독성/명확성)
+
+## ✅ 리팩토링 체크리스트
+리팩토링 시작 전
+- [ ] 대상 및 범위 명확화
+- [ ] 영향 범위 분석 완료
+- [ ] 단계별 계획 수립
+
+리팩토링 진행 중
+- [ ] 각 단계마다 테스트 통과 확인
+- [ ] 작은 단위로 점진적 변경
+- [ ] 커밋 단위로 작업 분리
+- [ ] 타입 체크 및 린트 통과 확인
+
+리팩토링 완료 후
+- [ ] 전체 테스트 스위트 통과
+- [ ] 수동 기능 테스트 완료
+- [ ] 코드 리뷰 (self/peer)
+- [ ] 문서 업데이트 (필요 시)
+
+## 🚨 주의사항 및 중단 기준
+절대 하지 말아야 할 것
+1. 테스트를 건너뛰지 않기 (변경 전/후 테스트 필수)
+2. 너무 큰 범위를 한 번에 변경하지 않기 (PR/커밋 분리)
+3. 기능 변경과 혼합하지 않기 (리팩토링과 기능 추가 분리)
+4. 타입 안전성 무시하지 않기 (`any` 금지, 정확한 타입 정의)
+
+리팩토링 중단 기준
+- ❌ 테스트가 계속 실패하고 원인 파악이 어려울 때
+- ❌ 변경 범위가 예상보다 커져 제어가 어려울 때
+- ❌ 성능이 현저히 저하될 때
+- ❌ 리팩토링으로 인한 버그가 발생할 때
+
+## 영향받는 부분 명시 가이드
+리팩토링 PR/커밋 설명에 다음을 포함하세요:
+- 수정/추출한 컴포넌트/훅/유틸 및 그 사용처 목록
+- 영향을 받은 파일/디렉토리: 예) [hooks/](mdc:src/hooks/), [utils/](mdc:src/utils/), [App.tsx](mdc:src/App.tsx)
+- 제거된 중복 코드 구체 위치와 대체 경로
+- 도입한 상수/타입의 정의 위치: 예) [types.ts](mdc:src/types.ts)
+
+## 검증 방법
+- 테스트: Vitest + Testing Library 기준, 전체 스위트 통과 필수
+- 타입: TS 빌드/체크 통과 필수
+- 린트: ESLint 경고/오류 무
+- 수동: 핵심 사용자 플로우 스모크 테스트
+
