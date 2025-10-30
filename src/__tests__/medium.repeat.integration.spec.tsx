@@ -94,3 +94,100 @@ describe('반복 일정 - 통합', () => {
     expect(list.getByText('주간 스탠드업')).toBeInTheDocument();
   });
 });
+
+// 반복 아이콘 표시 및 정렬(월/주 뷰) - RED 단계
+describe('반복 아이콘 표시(월/주 뷰)', () => {
+  it('월 뷰에서 repeat가 존재하는 이벤트는 제목 앞에 아이콘을 표시한다(RED)', async () => {
+    vi.setSystemTime(new Date('2025-10-01'));
+
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '반복 A',
+        date: '2025-10-02',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '반복 이벤트',
+        location: '회의실',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1 },
+        notificationTime: 10,
+      } as any,
+      {
+        id: '2',
+        title: '단일 B',
+        date: '2025-10-02',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '단일 이벤트',
+        location: '회의실',
+        category: '업무',
+        // repeat 없음 => 아이콘 표시 안 함
+        notificationTime: 10,
+      } as any,
+    ]);
+
+    setup();
+
+    // 일정 로딩 완료 대기
+    await screen.findByText('일정 로딩 완료!');
+
+    const monthView = within(screen.getByTestId('month-view'));
+
+    // 반복 A는 아이콘이 있어야 함
+    const aTitle = monthView.getByText('반복 A');
+    const aContainer = aTitle.closest('li') ?? aTitle.parentElement!;
+    expect(within(aContainer).getByLabelText('반복 일정')).toBeInTheDocument();
+
+    // 단일 B는 아이콘이 없어야 함
+    const bTitle = monthView.getByText('단일 B');
+    const bContainer = bTitle.closest('li') ?? bTitle.parentElement!;
+    expect(within(bContainer).queryByLabelText('반복 일정')).toBeNull();
+  });
+
+  it('주 뷰에서도 repeat가 존재하는 이벤트만 아이콘을 표시한다(RED)', async () => {
+    vi.setSystemTime(new Date('2025-10-01'));
+
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '반복 A',
+        date: '2025-10-02',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '반복 이벤트',
+        location: '회의실',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1 },
+        notificationTime: 10,
+      } as any,
+      {
+        id: '2',
+        title: '단일 B',
+        date: '2025-10-02',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '단일 이벤트',
+        location: '회의실',
+        category: '업무',
+        notificationTime: 10,
+      } as any,
+    ]);
+
+    const { user } = setup();
+
+    // 주 뷰로 전환
+    await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: 'week-option' }));
+
+    const weekView = within(screen.getByTestId('week-view'));
+
+    const aTitle = weekView.getByText('반복 A');
+    const aContainer = aTitle.closest('li') ?? aTitle.parentElement!;
+    expect(within(aContainer).getByLabelText('반복 일정')).toBeInTheDocument();
+
+    const bTitle = weekView.getByText('단일 B');
+    const bContainer = bTitle.closest('li') ?? bTitle.parentElement!;
+    expect(within(bContainer).queryByLabelText('반복 일정')).toBeNull();
+  });
+});
