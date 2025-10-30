@@ -86,5 +86,4 @@ describe('반복 일정 확장 - eventUtils.getFilteredEvents', () => {
     expect(aprilFiltered.length).toBe(0);
   });
 
-  // 시스템 최대 종료일 상한 관련 단위 테스트는 명세 변경으로 제거되었습니다.
 });
