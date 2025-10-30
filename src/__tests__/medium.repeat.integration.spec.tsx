@@ -234,4 +234,100 @@ describe('반복 일정 수정/삭제 - 통합(RED)', () => {
     const container = item.closest('li') ?? item.parentElement!;
     expect(within(container).queryByLabelText('반복 일정')).toBeNull();
   });
+
+  it('반복 일정 전체 수정: 모달에서 아니오를 선택하면 시리즈 전체에 변경이 반영되고 아이콘은 유지된다(RED)', async () => {
+    vi.setSystemTime(new Date('2025-10-01'));
+
+    setupMockHandlerCreation([
+      {
+        id: 'r2',
+        title: '팀 점검',
+        date: '2025-10-02',
+        startTime: '10:00',
+        endTime: '10:30',
+        description: '',
+        location: '',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1 },
+        notificationTime: 10,
+      } as any,
+    ]);
+
+    const { user } = setup();
+
+    const list = within(screen.getByTestId('event-list'));
+    await user.click(list.getByText('팀 점검'));
+    await user.click(screen.getByLabelText('수정'));
+
+    const titleInput = screen.getByLabelText('제목');
+    await user.clear(titleInput);
+    await user.type(titleInput, '팀 점검(전체 수정)');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+    await user.click(screen.getByRole('button', { name: '아니오' }));
+
+    // 기대: 뷰 범위 내 시리즈 인스턴스 제목 변경 + 반복 아이콘 유지 (RED)
+    const changed = list.getByText('팀 점검(전체 수정)');
+    const container = changed.closest('li') ?? changed.parentElement!;
+    expect(within(container).getByLabelText('반복 일정')).toBeInTheDocument();
+  });
+
+  it('반복 일정 단일 삭제: 모달에서 예를 선택하면 해당 날짜 인스턴스만 사라진다(RED)', async () => {
+    vi.setSystemTime(new Date('2025-10-01'));
+
+    setupMockHandlerCreation([
+      {
+        id: 'r3',
+        title: '정기 점검',
+        date: '2025-10-03',
+        startTime: '11:00',
+        endTime: '11:30',
+        description: '',
+        location: '',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1 },
+        notificationTime: 10,
+      } as any,
+    ]);
+
+    const { user } = setup();
+
+    const list = within(screen.getByTestId('event-list'));
+    const target = await list.findByText('정기 점검');
+    await user.click(target);
+    await user.click(screen.getByLabelText('삭제'));
+    await user.click(screen.getByRole('button', { name: '예' }));
+
+    // 기대: 해당 날짜 인스턴스만 제거 (RED)
+    expect(list.queryByText('정기 점검')).toBeNull();
+  });
+
+  it('반복 일정 전체 삭제: 모달에서 아니오를 선택하면 시리즈 전체가 제거된다(RED)', async () => {
+    vi.setSystemTime(new Date('2025-10-01'));
+
+    setupMockHandlerCreation([
+      {
+        id: 'r4',
+        title: '전체 삭제 테스트',
+        date: '2025-10-07',
+        startTime: '15:00',
+        endTime: '16:00',
+        description: '',
+        location: '',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1 },
+        notificationTime: 10,
+      } as any,
+    ]);
+
+    const { user } = setup();
+
+    const list = within(screen.getByTestId('event-list'));
+    await user.click(list.getByText('전체 삭제 테스트'));
+    await user.click(screen.getByLabelText('삭제'));
+    await user.click(screen.getByRole('button', { name: '아니오' }));
+
+    // 기대: 시리즈 전체 제거 (RED)
+    expect(list.queryByText('전체 삭제 테스트')).toBeNull();
+  });
 });
