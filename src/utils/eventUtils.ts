@@ -76,7 +76,8 @@ export function getFilteredEvents(
 
 function expandRepeatingEventOccurrences(event: Event, rangeStart: Date, rangeEnd: Date, out: Event[]): void {
   const startDate = new Date(event.date);
-  const repeat = event.repeat;
+  // 일부 호출자가 repeat 필드를 제공하지 않는 경우가 있어 방어적으로 기본값을 설정한다.
+  const repeat = event.repeat ?? { type: 'none', interval: 0 } as Event['repeat'];
   const interval = repeat.interval ?? 1;
   const endLimit = repeat.endDate ? new Date(repeat.endDate) : null;
 

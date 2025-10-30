@@ -129,18 +129,17 @@ describe('반복 아이콘 표시(월/주 뷰)', () => {
 
     setup();
 
-    // 일정 로딩 완료 대기
-    await screen.findByText('일정 로딩 완료!');
-
     const monthView = within(screen.getByTestId('month-view'));
 
-    // 반복 A는 아이콘이 있어야 함
-    const aTitle = monthView.getByText('반복 A');
-    const aContainer = aTitle.closest('li') ?? aTitle.parentElement!;
-    expect(within(aContainer).getByLabelText('반복 일정')).toBeInTheDocument();
+    // 반복 A는 모든 표시 인스턴스에 아이콘이 있어야 함
+    const aTitles = await monthView.findAllByText('반복 A');
+    for (const aTitle of aTitles) {
+      const aContainer = aTitle.closest('li') ?? aTitle.parentElement!;
+      expect(within(aContainer).getByLabelText('반복 일정')).toBeInTheDocument();
+    }
 
-    // 단일 B는 아이콘이 없어야 함
-    const bTitle = monthView.getByText('단일 B');
+    // 단일 B는 아이콘이 없어야 함 (해당 일자 1건)
+    const bTitle = await monthView.findByText('단일 B');
     const bContainer = bTitle.closest('li') ?? bTitle.parentElement!;
     expect(within(bContainer).queryByLabelText('반복 일정')).toBeNull();
   });
@@ -182,11 +181,11 @@ describe('반복 아이콘 표시(월/주 뷰)', () => {
 
     const weekView = within(screen.getByTestId('week-view'));
 
-    const aTitle = weekView.getByText('반복 A');
+    const aTitle = await weekView.findByText('반복 A');
     const aContainer = aTitle.closest('li') ?? aTitle.parentElement!;
     expect(within(aContainer).getByLabelText('반복 일정')).toBeInTheDocument();
 
-    const bTitle = weekView.getByText('단일 B');
+    const bTitle = await weekView.findByText('단일 B');
     const bContainer = bTitle.closest('li') ?? bTitle.parentElement!;
     expect(within(bContainer).queryByLabelText('반복 일정')).toBeNull();
   });

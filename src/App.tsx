@@ -1,4 +1,5 @@
 import { Notifications, ChevronLeft, ChevronRight, Delete, Edit, Close } from '@mui/icons-material';
+import RepeatIcon from '@mui/icons-material/Repeat';
 import {
   Alert,
   AlertTitle,
@@ -189,6 +190,8 @@ function App() {
                       .filter(
                         (event) => new Date(event.date).toDateString() === date.toDateString()
                       )
+                      .slice()
+                      .sort((a, b) => a.startTime.localeCompare(b.startTime))
                       .map((event) => {
                         const isNotified = notifiedEvents.includes(event.id);
                         return (
@@ -208,6 +211,12 @@ function App() {
                           >
                             <Stack direction="row" spacing={1} alignItems="center">
                               {isNotified && <Notifications fontSize="small" />}
+                              {event.repeat && event.repeat.type !== 'none' && (
+                                <RepeatIcon
+                                  aria-label="반복 일정"
+                                  sx={{ fontSize: 14, color: 'inherit' }}
+                                />
+                              )}
                               <Typography
                                 variant="caption"
                                 noWrap
@@ -276,36 +285,45 @@ function App() {
                                 {holiday}
                               </Typography>
                             )}
-                            {getEventsForDay(filteredEvents, day).map((event) => {
-                              const isNotified = notifiedEvents.includes(event.id);
-                              return (
-                                <Box
-                                  key={event.id}
-                                  sx={{
-                                    p: 0.5,
-                                    my: 0.5,
-                                    backgroundColor: isNotified ? '#ffebee' : '#f5f5f5',
-                                    borderRadius: 1,
-                                    fontWeight: isNotified ? 'bold' : 'normal',
-                                    color: isNotified ? '#d32f2f' : 'inherit',
-                                    minHeight: '18px',
-                                    width: '100%',
-                                    overflow: 'hidden',
-                                  }}
-                                >
-                                  <Stack direction="row" spacing={1} alignItems="center">
-                                    {isNotified && <Notifications fontSize="small" />}
-                                    <Typography
-                                      variant="caption"
-                                      noWrap
-                                      sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}
-                                    >
-                                      {event.title}
-                                    </Typography>
-                                  </Stack>
-                                </Box>
-                              );
-                            })}
+                            {getEventsForDay(filteredEvents, day)
+                              .slice()
+                              .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                              .map((event) => {
+                                const isNotified = notifiedEvents.includes(event.id);
+                                return (
+                                  <Box
+                                    key={event.id}
+                                    sx={{
+                                      p: 0.5,
+                                      my: 0.5,
+                                      backgroundColor: isNotified ? '#ffebee' : '#f5f5f5',
+                                      borderRadius: 1,
+                                      fontWeight: isNotified ? 'bold' : 'normal',
+                                      color: isNotified ? '#d32f2f' : 'inherit',
+                                      minHeight: '18px',
+                                      width: '100%',
+                                      overflow: 'hidden',
+                                    }}
+                                  >
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                      {isNotified && <Notifications fontSize="small" />}
+                                      {event.repeat && event.repeat.type !== 'none' && (
+                                        <RepeatIcon
+                                          aria-label="반복 일정"
+                                          sx={{ fontSize: 14, color: 'inherit' }}
+                                        />
+                                      )}
+                                      <Typography
+                                        variant="caption"
+                                        noWrap
+                                        sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}
+                                      >
+                                        {event.title}
+                                      </Typography>
+                                    </Stack>
+                                  </Box>
+                                );
+                              })}
                           </>
                         )}
                       </TableCell>
@@ -561,7 +579,7 @@ function App() {
                     <Typography>{event.description}</Typography>
                     <Typography>{event.location}</Typography>
                     <Typography>카테고리: {event.category}</Typography>
-                    {event.repeat.type !== 'none' && (
+                    {event.repeat && event.repeat.type !== 'none' && (
                       <Typography>
                         반복: {event.repeat.interval}
                         {event.repeat.type === 'daily' && '일'}
@@ -596,7 +614,10 @@ function App() {
         </Stack>
       </Stack>
 
-      <Dialog open={!isRepeating && isOverlapDialogOpen} onClose={() => setIsOverlapDialogOpen(false)}>
+      <Dialog
+        open={!isRepeating && isOverlapDialogOpen}
+        onClose={() => setIsOverlapDialogOpen(false)}
+      >
         <DialogTitle>일정 겹침 경고</DialogTitle>
         <DialogContent>
           <DialogContentText component="div">
