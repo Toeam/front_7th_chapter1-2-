@@ -9,7 +9,15 @@ function getViewRange(currentDate: Date, view: 'week' | 'month'): { start: Date;
   if (view === 'week') {
     const week = getWeekDates(currentDate);
     const start = week[0];
-    const end = new Date(week[6].getFullYear(), week[6].getMonth(), week[6].getDate(), 23, 59, 59, 999);
+    const end = new Date(
+      week[6].getFullYear(),
+      week[6].getMonth(),
+      week[6].getDate(),
+      23,
+      59,
+      59,
+      999
+    );
     return { start, end };
   }
   const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -17,12 +25,7 @@ function getViewRange(currentDate: Date, view: 'week' | 'month'): { start: Date;
   return { start, end };
 }
 
-function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
-  return events.filter((event) => {
-    const eventDate = new Date(event.date);
-    return isDateInRange(eventDate, start, end);
-  });
-}
+// removed unused filterEventsByDateRange helper
 
 function containsTerm(target: string, term: string) {
   return target.toLowerCase().includes(term.toLowerCase());
@@ -35,24 +38,7 @@ function searchEvents(events: Event[], term: string) {
   );
 }
 
-function filterEventsByDateRangeAtWeek(events: Event[], currentDate: Date) {
-  const weekDates = getWeekDates(currentDate);
-  return filterEventsByDateRange(events, weekDates[0], weekDates[6]);
-}
-
-function filterEventsByDateRangeAtMonth(events: Event[], currentDate: Date) {
-  const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-  const monthEnd = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() + 1,
-    0,
-    23,
-    59,
-    59,
-    999
-  );
-  return filterEventsByDateRange(events, monthStart, monthEnd);
-}
+// Note: previously exported convenience wrappers were unused and removed
 
 export function getFilteredEvents(
   events: Event[],
@@ -74,17 +60,29 @@ export function getFilteredEvents(
   return expanded;
 }
 
-function expandRepeatingEventOccurrences(event: Event, rangeStart: Date, rangeEnd: Date, out: Event[]): void {
+function expandRepeatingEventOccurrences(
+  event: Event,
+  rangeStart: Date,
+  rangeEnd: Date,
+  out: Event[]
+): void {
   const startDate = new Date(event.date);
   // 일부 호출자가 repeat 필드를 제공하지 않는 경우가 있어 방어적으로 기본값을 설정한다.
-  const repeat = event.repeat ?? { type: 'none', interval: 0 } as Event['repeat'];
+  const repeat = event.repeat ?? ({ type: 'none', interval: 0 } as Event['repeat']);
   const interval = repeat.interval ?? 1;
   const endLimit = repeat.endDate ? new Date(repeat.endDate) : null;
+  type EventWithExceptions = { exceptions?: string[] };
+  const withExceptions = event as unknown as EventWithExceptions;
+  const exceptions: Set<string> | null = Array.isArray(withExceptions.exceptions)
+    ? new Set<string>(withExceptions.exceptions)
+    : null;
 
   const pushIfInRange = (d: Date) => {
     if (d < rangeStart || d > rangeEnd) return;
     if (endLimit && d > endLimit) return;
-    out.push({ ...event, id: `${event.id}@${ymd(d)}`, date: ymd(d) });
+    const ymdStr = ymd(d);
+    if (exceptions && exceptions.has(ymdStr)) return;
+    out.push({ ...event, id: `${event.id}@${ymdStr}`, date: ymdStr });
   };
 
   if (repeat.type === 'none' || interval <= 0) {

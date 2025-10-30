@@ -218,7 +218,7 @@ describe('반복 일정 수정/삭제 - 통합(RED)', () => {
     // 우측 리스트에서 선택 → 수정
     const list = within(screen.getByTestId('event-list'));
     await user.click(list.getByText('주간 회의'));
-    await user.click(screen.getByLabelText('수정'));
+    await user.click(screen.getByLabelText('Edit event'));
 
     // 제목 변경
     const titleInput = screen.getByLabelText('제목');
@@ -257,7 +257,7 @@ describe('반복 일정 수정/삭제 - 통합(RED)', () => {
 
     const list = within(screen.getByTestId('event-list'));
     await user.click(list.getByText('팀 점검'));
-    await user.click(screen.getByLabelText('수정'));
+    await user.click(screen.getByLabelText('Edit event'));
 
     const titleInput = screen.getByLabelText('제목');
     await user.clear(titleInput);
@@ -295,7 +295,7 @@ describe('반복 일정 수정/삭제 - 통합(RED)', () => {
     const list = within(screen.getByTestId('event-list'));
     const target = await list.findByText('정기 점검');
     await user.click(target);
-    await user.click(screen.getByLabelText('삭제'));
+    await user.click(screen.getByLabelText('Delete event'));
     await user.click(screen.getByRole('button', { name: '예' }));
 
     // 기대: 해당 날짜 인스턴스만 제거 (RED)
@@ -324,7 +324,7 @@ describe('반복 일정 수정/삭제 - 통합(RED)', () => {
 
     const list = within(screen.getByTestId('event-list'));
     await user.click(list.getByText('전체 삭제 테스트'));
-    await user.click(screen.getByLabelText('삭제'));
+    await user.click(screen.getByLabelText('Delete event'));
     await user.click(screen.getByRole('button', { name: '아니오' }));
 
     // 기대: 시리즈 전체 제거 (RED)
