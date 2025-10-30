@@ -95,6 +95,62 @@ describe('반복 일정 - 통합', () => {
   });
 });
 
+describe('반복 유형 필수 검증(생성/수정) - RED', () => {
+  it('생성: "반복 일정" 체크 + 반복 유형 미선택으로 제출 시 오류 메시지 표시(RED)', async () => {
+    setupMockHandlerCreation([] as any);
+    const { user } = setup();
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+    await user.type(screen.getByLabelText('제목'), '반복 검증');
+    await user.type(screen.getByLabelText('날짜'), '2025-10-15');
+    await user.type(screen.getByLabelText('시작 시간'), '09:00');
+    await user.type(screen.getByLabelText('종료 시간'), '10:00');
+    await user.type(screen.getByLabelText('설명'), '검증');
+    await user.type(screen.getByLabelText('위치'), '회의실');
+    await user.click(screen.getByLabelText('카테고리'));
+    await user.click(within(screen.getByLabelText('카테고리')).getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: '업무-option' }));
+
+    // 반복 일정 체크만 활성화(반복 유형 미선택)
+    await user.click(screen.getByLabelText('반복 일정'));
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    // 기대: 오류 메시지 표출 (현재 구현에는 검증 부재 가능 → RED)
+    expect(await screen.findByText('반복 유형을 선택해주세요')).toBeInTheDocument();
+  });
+
+  it('수정: 기존 일정 편집에서 "반복 일정" 체크 + 반복 유형 미선택 제출 시 오류 메시지(RED)', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '기존 일정',
+        date: '2025-10-15',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '편집 대상',
+        location: '회의실',
+        category: '업무',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 10,
+      },
+    ] as any);
+
+    const { user } = setup();
+
+    // 리스트에서 첫 번째 편집 아이콘 클릭
+    const list = within(screen.getByTestId('event-list'));
+    await user.click(list.getAllByLabelText('Edit event')[0]);
+
+    // 반복 일정 체크만 활성화
+    await user.click(screen.getByLabelText('반복 일정'));
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    expect(await screen.findByText('반복 유형을 선택해주세요')).toBeInTheDocument();
+  });
+});
+
 // 반복 아이콘 표시 및 정렬(월/주 뷰) - RED 단계
 describe('반복 아이콘 표시(월/주 뷰)', () => {
   it('월 뷰에서 repeat가 존재하는 이벤트는 제목 앞에 아이콘을 표시한다(RED)', async () => {
