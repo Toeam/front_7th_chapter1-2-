@@ -192,3 +192,46 @@ describe('반복 아이콘 표시(월/주 뷰)', () => {
     expect(within(bContainer).queryByLabelText('반복 일정')).toBeNull();
   });
 });
+
+// 수정/삭제 플로우 - 첫 RED 케이스 추가
+describe('반복 일정 수정/삭제 - 통합(RED)', () => {
+  it('반복 일정 단일 수정: 모달에서 예를 선택하면 해당 날짜만 단일로 반영되고 아이콘이 사라진다(RED)', async () => {
+    vi.setSystemTime(new Date('2025-10-01'));
+
+    setupMockHandlerCreation([
+      {
+        id: 'r1',
+        title: '주간 회의',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '09:30',
+        description: '',
+        location: '',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1 },
+        notificationTime: 10,
+      } as any,
+    ]);
+
+    const { user } = setup();
+
+    // 우측 리스트에서 선택 → 수정
+    const list = within(screen.getByTestId('event-list'));
+    await user.click(list.getByText('주간 회의'));
+    await user.click(screen.getByLabelText('수정'));
+
+    // 제목 변경
+    const titleInput = screen.getByLabelText('제목');
+    await user.clear(titleInput);
+    await user.type(titleInput, '주간 회의(수정)');
+
+    // 저장 후 모달에서 '예' 선택
+    await user.click(screen.getByTestId('event-submit-button'));
+    await user.click(screen.getByRole('button', { name: '예' }));
+
+    // 기대: 해당 날짜 항목에서 반복 아이콘 제거되고 제목이 변경됨 (현재는 RED)
+    const item = list.getByText('주간 회의(수정)');
+    const container = item.closest('li') ?? item.parentElement!;
+    expect(within(container).queryByLabelText('반복 일정')).toBeNull();
+  });
+});
