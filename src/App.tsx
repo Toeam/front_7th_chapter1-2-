@@ -107,6 +107,18 @@ function App() {
 
   const { enqueueSnackbar } = useSnackbar();
 
+  const EventTitle = ({ event, isNotified }: { event: Event; isNotified: boolean }) => (
+    <Stack direction="row" spacing={1} alignItems="center">
+      {isNotified && <Notifications fontSize="small" />}
+      {event.repeat && event.repeat.type !== 'none' && (
+        <RepeatIcon aria-label="반복 일정" sx={{ fontSize: 14, color: 'inherit' }} />
+      )}
+      <Typography variant="caption" noWrap sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}>
+        {event.title}
+      </Typography>
+    </Stack>
+  );
+
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
       enqueueSnackbar('필수 정보를 모두 입력해주세요.', { variant: 'error' });
@@ -209,22 +221,7 @@ function App() {
                               overflow: 'hidden',
                             }}
                           >
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              {isNotified && <Notifications fontSize="small" />}
-                              {event.repeat && event.repeat.type !== 'none' && (
-                                <RepeatIcon
-                                  aria-label="반복 일정"
-                                  sx={{ fontSize: 14, color: 'inherit' }}
-                                />
-                              )}
-                              <Typography
-                                variant="caption"
-                                noWrap
-                                sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}
-                              >
-                                {event.title}
-                              </Typography>
-                            </Stack>
+                            <EventTitle event={event} isNotified={isNotified} />
                           </Box>
                         );
                       })}
@@ -305,22 +302,7 @@ function App() {
                                       overflow: 'hidden',
                                     }}
                                   >
-                                    <Stack direction="row" spacing={1} alignItems="center">
-                                      {isNotified && <Notifications fontSize="small" />}
-                                      {event.repeat && event.repeat.type !== 'none' && (
-                                        <RepeatIcon
-                                          aria-label="반복 일정"
-                                          sx={{ fontSize: 14, color: 'inherit' }}
-                                        />
-                                      )}
-                                      <Typography
-                                        variant="caption"
-                                        noWrap
-                                        sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}
-                                      >
-                                        {event.title}
-                                      </Typography>
-                                    </Stack>
+                                    <EventTitle event={event} isNotified={isNotified} />
                                   </Box>
                                 );
                               })}
