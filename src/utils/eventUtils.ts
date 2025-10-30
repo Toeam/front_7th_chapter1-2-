@@ -94,70 +94,106 @@ function expandRepeatingEventOccurrences(event: Event, rangeStart: Date, rangeEn
   }
 
   switch (repeat.type) {
-    case 'daily': {
-      const stepDays = interval;
-      const first = new Date(startDate);
-      if (first < rangeStart) {
-        const diffDays = Math.ceil((rangeStart.getTime() - first.getTime()) / (24 * 60 * 60 * 1000));
-        const increments = Math.floor(diffDays / stepDays) * stepDays;
-        first.setDate(first.getDate() + increments);
-        while (first < rangeStart) first.setDate(first.getDate() + stepDays);
-      }
-      for (let d = new Date(first); d <= rangeEnd; d.setDate(d.getDate() + stepDays)) {
-        pushIfInRange(new Date(d));
-      }
+    case 'daily':
+      expandDaily(startDate, interval, rangeStart, rangeEnd, pushIfInRange);
       break;
-    }
-    case 'weekly': {
-      const stepDays = 7 * interval;
-      const first = new Date(startDate);
-      if (first < rangeStart) {
-        const diffDays = Math.ceil((rangeStart.getTime() - first.getTime()) / (24 * 60 * 60 * 1000));
-        const increments = Math.floor(diffDays / stepDays) * stepDays;
-        first.setDate(first.getDate() + increments);
-        while (first < rangeStart) first.setDate(first.getDate() + stepDays);
-      }
-      for (let d = new Date(first); d <= rangeEnd; d.setDate(d.getDate() + stepDays)) {
-        pushIfInRange(new Date(d));
-      }
+    case 'weekly':
+      expandWeekly(startDate, interval, rangeStart, rangeEnd, pushIfInRange);
       break;
-    }
-    case 'monthly': {
-      const first = new Date(startDate);
-      while (first < rangeStart) {
-        first.setMonth(first.getMonth() + interval);
-      }
-      for (let d = new Date(first); d <= rangeEnd; d.setMonth(d.getMonth() + interval)) {
-        const year = d.getFullYear();
-        const month = d.getMonth();
-        const day = startDate.getDate();
-        const lastDay = new Date(year, month + 1, 0).getDate();
-        if (day > lastDay) {
-          continue;
-        }
-        const occ = new Date(year, month, day);
-        pushIfInRange(occ);
-      }
+    case 'monthly':
+      expandMonthly(startDate, interval, rangeStart, rangeEnd, pushIfInRange);
       break;
-    }
-    case 'yearly': {
-      const startYear = startDate.getFullYear();
-      const month = startDate.getMonth();
-      const day = startDate.getDate();
-      const rangeStartYear = rangeStart.getFullYear();
-      const rangeEndYear = rangeEnd.getFullYear();
-      const yearsDiff = rangeStartYear - startYear;
-      const k = yearsDiff > 0 ? Math.ceil(yearsDiff / interval) : 0;
-      let year = startYear + k * interval;
-      while (year <= rangeEndYear) {
-        const lastDay = new Date(year, month + 1, 0).getDate();
-        if (day <= lastDay) {
-          const occ = new Date(year, month, day);
-          pushIfInRange(occ);
-        }
-        year += interval;
-      }
+    case 'yearly':
+      expandYearly(startDate, interval, rangeStart, rangeEnd, pushIfInRange);
       break;
+  }
+}
+
+function expandDaily(
+  startDate: Date,
+  interval: number,
+  rangeStart: Date,
+  rangeEnd: Date,
+  pushIfInRange: (d: Date) => void
+): void {
+  const stepDays = interval;
+  const first = new Date(startDate);
+  if (first < rangeStart) {
+    const diffDays = Math.ceil((rangeStart.getTime() - first.getTime()) / (24 * 60 * 60 * 1000));
+    const increments = Math.floor(diffDays / stepDays) * stepDays;
+    first.setDate(first.getDate() + increments);
+    while (first < rangeStart) first.setDate(first.getDate() + stepDays);
+  }
+  for (let d = new Date(first); d <= rangeEnd; d.setDate(d.getDate() + stepDays)) {
+    pushIfInRange(new Date(d));
+  }
+}
+
+function expandWeekly(
+  startDate: Date,
+  interval: number,
+  rangeStart: Date,
+  rangeEnd: Date,
+  pushIfInRange: (d: Date) => void
+): void {
+  const stepDays = 7 * interval;
+  const first = new Date(startDate);
+  if (first < rangeStart) {
+    const diffDays = Math.ceil((rangeStart.getTime() - first.getTime()) / (24 * 60 * 60 * 1000));
+    const increments = Math.floor(diffDays / stepDays) * stepDays;
+    first.setDate(first.getDate() + increments);
+    while (first < rangeStart) first.setDate(first.getDate() + stepDays);
+  }
+  for (let d = new Date(first); d <= rangeEnd; d.setDate(d.getDate() + stepDays)) {
+    pushIfInRange(new Date(d));
+  }
+}
+
+function expandMonthly(
+  startDate: Date,
+  interval: number,
+  rangeStart: Date,
+  rangeEnd: Date,
+  pushIfInRange: (d: Date) => void
+): void {
+  const first = new Date(startDate);
+  while (first < rangeStart) {
+    first.setMonth(first.getMonth() + interval);
+  }
+  for (let d = new Date(first); d <= rangeEnd; d.setMonth(d.getMonth() + interval)) {
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const day = startDate.getDate();
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    if (day > lastDay) {
+      continue;
     }
+    const occ = new Date(year, month, day);
+    pushIfInRange(occ);
+  }
+}
+
+function expandYearly(
+  startDate: Date,
+  interval: number,
+  rangeStart: Date,
+  rangeEnd: Date,
+  pushIfInRange: (d: Date) => void
+): void {
+  const startYear = startDate.getFullYear();
+  const month = startDate.getMonth();
+  const day = startDate.getDate();
+  const rangeStartYear = rangeStart.getFullYear();
+  const rangeEndYear = rangeEnd.getFullYear();
+  const yearsDiff = rangeStartYear - startYear;
+  const k = yearsDiff > 0 ? Math.ceil(yearsDiff / interval) : 0;
+  let year = startYear + k * interval;
+  while (year <= rangeEndYear) {
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    if (day <= lastDay) {
+      const occ = new Date(year, month, day);
+      pushIfInRange(occ);
+    }
+    year += interval;
   }
 }
