@@ -130,6 +130,8 @@ function App() {
       return;
     }
 
+    // 명세 변경: 반복 유형 미선택 시에도 제출 허용
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -476,7 +478,12 @@ function App() {
                     size="small"
                     type="date"
                     value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      const max = '2025-12-31';
+                      setRepeatEndDate(v && v > max ? max : v);
+                    }}
+                    slotProps={{ htmlInput: { max: '2025-12-31' } }}
                   />
                 </FormControl>
               </Stack>

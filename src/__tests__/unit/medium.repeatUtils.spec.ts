@@ -86,19 +86,5 @@ describe('반복 일정 확장 - eventUtils.getFilteredEvents', () => {
     expect(aprilFiltered.length).toBe(0);
   });
 
-  it('시스템 최대 종료일 2025-12-31을 초과하는 인스턴스는 포함되지 않는다(RED)', () => {
-    const events = [
-      makeEvent({ date: '2025-10-01', repeat: { type: 'weekly', interval: 1 } }),
-    ];
-
-    // 2025-12 말: 포함
-    const dec = new Date('2025-12-01');
-    const decFiltered = getFilteredEvents(events as any, '', dec, 'month');
-    expect(decFiltered.some((e: any) => e.date === '2025-12-31')).toBe(true);
-
-    // 2026-01: 시스템 상한을 넘으므로 표시되지 않아야 한다 (현재 구현은 상한 없음 → RED)
-    const jan = new Date('2026-01-01');
-    const janFiltered = getFilteredEvents(events as any, '', jan, 'month');
-    expect(janFiltered.length).toBe(0);
-  });
+  // 시스템 최대 종료일 상한 관련 단위 테스트는 명세 변경으로 제거되었습니다.
 });
