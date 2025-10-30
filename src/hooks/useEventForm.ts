@@ -6,6 +6,13 @@ import { getTimeErrorMessage } from '../utils/timeValidation';
 type TimeErrorRecord = Record<'startTimeError' | 'endTimeError', string | null>;
 
 export const useEventForm = (initialEvent?: Event) => {
+  const getInitialRepeat = (e?: Event) => ({
+    isRepeating: (e?.repeat?.type ?? 'none') !== 'none',
+    type: (e?.repeat?.type ?? 'none') as RepeatType,
+    interval: e?.repeat?.interval ?? 1,
+    endDate: e?.repeat?.endDate || '',
+  });
+  const initialRepeat = getInitialRepeat(initialEvent);
   const [title, setTitle] = useState(initialEvent?.title || '');
   const [date, setDate] = useState(initialEvent?.date || '');
   const [startTime, setStartTime] = useState(initialEvent?.startTime || '');
@@ -13,10 +20,10 @@ export const useEventForm = (initialEvent?: Event) => {
   const [description, setDescription] = useState(initialEvent?.description || '');
   const [location, setLocation] = useState(initialEvent?.location || '');
   const [category, setCategory] = useState(initialEvent?.category || '업무');
-  const [isRepeating, setIsRepeating] = useState((initialEvent?.repeat?.type ?? 'none') !== 'none');
-  const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat?.type || 'none');
-  const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat?.interval ?? 1);
-  const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat?.endDate || '');
+  const [isRepeating, setIsRepeating] = useState(initialRepeat.isRepeating);
+  const [repeatType, setRepeatType] = useState<RepeatType>(initialRepeat.type);
+  const [repeatInterval, setRepeatInterval] = useState(initialRepeat.interval);
+  const [repeatEndDate, setRepeatEndDate] = useState(initialRepeat.endDate);
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -51,6 +58,7 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatInterval(1);
     setRepeatEndDate('');
     setNotificationTime(10);
+    setTimeError({ startTimeError: null, endTimeError: null });
   };
 
   const editEvent = (event: Event) => {
@@ -62,10 +70,11 @@ export const useEventForm = (initialEvent?: Event) => {
     setDescription(event.description);
     setLocation(event.location);
     setCategory(event.category);
-    setIsRepeating(event.repeat.type !== 'none');
-    setRepeatType(event.repeat.type);
-    setRepeatInterval(event.repeat.interval);
-    setRepeatEndDate(event.repeat.endDate || '');
+    const r = getInitialRepeat(event);
+    setIsRepeating(r.isRepeating);
+    setRepeatType(r.type);
+    setRepeatInterval(r.interval);
+    setRepeatEndDate(r.endDate);
     setNotificationTime(event.notificationTime);
   };
 
