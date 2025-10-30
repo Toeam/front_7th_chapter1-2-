@@ -135,6 +135,14 @@ function App() {
       notificationTime,
     };
 
+    // 반복 일정은 겹침을 고려하지 않음
+    if (isRepeating) {
+      setIsOverlapDialogOpen(false);
+      await saveEvent(eventData);
+      resetForm();
+      return;
+    }
+
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
@@ -590,7 +598,7 @@ function App() {
         </Stack>
       </Stack>
 
-      <Dialog open={isOverlapDialogOpen} onClose={() => setIsOverlapDialogOpen(false)}>
+      <Dialog open={!isRepeating && isOverlapDialogOpen} onClose={() => setIsOverlapDialogOpen(false)}>
         <DialogTitle>일정 겹침 경고</DialogTitle>
         <DialogContent>
           <DialogContentText>

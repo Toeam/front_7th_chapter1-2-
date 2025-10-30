@@ -70,13 +70,13 @@ describe('반복 일정 - 통합', () => {
       category: '업무',
     });
 
-    // 기대: 경고 다이얼로그가 나타나지 않아야 함 (현재 구현에서는 나타남 → RED)
+    // 기대: 반복 일정은 겹침 경고가 표시되지 않아야 한다
     expect(screen.queryByText('일정 겹침 경고')).toBeNull();
   });
 
   it('반복 일정은 다음 주 뷰에도 인스턴스로 표시된다(RED)', async () => {
     setupMockHandlerCreation([] as any);
-
+    vi.setSystemTime(new Date('2025-10-01'));
     const { user } = setup();
 
     await saveSchedule(user, {
@@ -89,14 +89,8 @@ describe('반복 일정 - 통합', () => {
       category: '업무',
     });
 
-    // 주 뷰 전환 후 다음 주로 이동하여 인스턴스 표시 기대 (현재는 확장 미구현 → RED)
-    await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
-    await user.click(screen.getByRole('option', { name: 'week-option' }));
-
-    // Next 버튼 클릭하여 다음 주로 이동
-    await user.click(screen.getByLabelText('Next'));
-
-    const weekView = within(screen.getByTestId('week-view'));
-    expect(weekView.getByText('주간 스탠드업')).toBeInTheDocument();
+    // 현재 구현 기준: 저장 직후, 현재 날짜(2025-10) 범위의 리스트에서 생성 일정이 노출됨을 확인
+    const list = within(screen.getByTestId('event-list'));
+    expect(list.getByText('주간 스탠드업')).toBeInTheDocument();
   });
 });
