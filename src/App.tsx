@@ -637,10 +637,10 @@ function App() {
           {confirmKind === 'conflict'
             ? '일정 겹침 경고'
             : confirmKind === 'repeat-edit'
-            ? '해당 일정만 수정하시겠어요?'
-            : confirmKind === 'repeat-delete'
-            ? '해당 일정만 삭제하시겠어요?'
-            : '확인'}
+              ? '해당 일정만 수정하시겠어요?'
+              : confirmKind === 'repeat-delete'
+                ? '해당 일정만 삭제하시겠어요?'
+                : '확인'}
         </DialogTitle>
         <DialogContent>
           <DialogContentText component="div">

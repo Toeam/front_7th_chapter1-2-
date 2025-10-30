@@ -91,7 +91,10 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     );
   };
 
-  const localCreateSingleFromSeries = (series: Event, single: Omit<Event, 'id' | 'repeat'> & { repeat?: Event['repeat'] }) => {
+  const localCreateSingleFromSeries = (
+    series: Event,
+    single: Omit<Event, 'id' | 'repeat'> & { repeat?: Event['repeat'] }
+  ) => {
     const newId = `local-${Date.now()}`;
     const singleEvent: Event = {
       id: newId,

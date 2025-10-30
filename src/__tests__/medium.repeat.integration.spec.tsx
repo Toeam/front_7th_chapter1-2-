@@ -24,7 +24,15 @@ const setup = () => {
 
 const saveSchedule = async (
   user: ReturnType<typeof userEvent.setup>,
-  form: { title: string; date: string; startTime: string; endTime: string; description: string; location: string; category: string }
+  form: {
+    title: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    description: string;
+    location: string;
+    category: string;
+  }
 ) => {
   await user.click(screen.getAllByText('일정 추가')[0]);
   await user.type(screen.getByLabelText('제목'), form.title);

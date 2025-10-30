@@ -20,9 +20,7 @@ describe('반복 일정 확장 - eventUtils.getFilteredEvents', () => {
   });
 
   it('매월 반복: 31일 시작 시 31일이 있는 달에만 표시되고 2월 등에는 표시되지 않는다', () => {
-    const events = [
-      makeEvent({ date: '2025-01-31', repeat: { type: 'monthly' } }),
-    ];
+    const events = [makeEvent({ date: '2025-01-31', repeat: { type: 'monthly' } })];
 
     // 2025-02 월 뷰: 2월에는 31일이 없으므로 표시되지 않아야 한다
     const feb = new Date('2025-02-01');
@@ -38,9 +36,7 @@ describe('반복 일정 확장 - eventUtils.getFilteredEvents', () => {
   });
 
   it('매년 반복: 2024-02-29 시작 시 다음 윤년(2028-02-29)에만 표시된다', () => {
-    const events = [
-      makeEvent({ date: '2024-02-29', repeat: { type: 'yearly' } }),
-    ];
+    const events = [makeEvent({ date: '2024-02-29', repeat: { type: 'yearly' } })];
 
     // 2025-02 월 뷰: 표시되지 않음
     const y2025Feb = new Date('2025-02-01');
@@ -85,5 +81,4 @@ describe('반복 일정 확장 - eventUtils.getFilteredEvents', () => {
     const aprilFiltered = getFilteredEvents(events as any, '', apr, 'month');
     expect(aprilFiltered.length).toBe(0);
   });
-
 });
