@@ -601,14 +601,14 @@ function App() {
       <Dialog open={!isRepeating && isOverlapDialogOpen} onClose={() => setIsOverlapDialogOpen(false)}>
         <DialogTitle>일정 겹침 경고</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            다음 일정과 겹칩니다:
+          <DialogContentText component="div">
+            <Typography component="p">다음 일정과 겹칩니다:</Typography>
             {overlappingEvents.map((event) => (
-              <Typography key={event.id}>
+              <Typography key={event.id} component="p">
                 {event.title} ({event.date} {event.startTime}-{event.endTime})
               </Typography>
             ))}
-            계속 진행하시겠습니까?
+            <Typography component="p">계속 진행하시겠습니까?</Typography>
           </DialogContentText>
         </DialogContent>
         <DialogActions>
