@@ -1,6 +1,22 @@
 import { Event } from '../types';
 import { getWeekDates, isDateInRange } from './dateUtils';
 
+function ymd(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function getViewRange(currentDate: Date, view: 'week' | 'month'): { start: Date; end: Date } {
+  if (view === 'week') {
+    const week = getWeekDates(currentDate);
+    const start = week[0];
+    const end = new Date(week[6].getFullYear(), week[6].getMonth(), week[6].getDate(), 23, 59, 59, 999);
+    return { start, end };
+  }
+  const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  const end = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
+  return { start, end };
+}
+
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
   return events.filter((event) => {
     const eventDate = new Date(event.date);
@@ -47,16 +63,7 @@ export function getFilteredEvents(
   const searchedEvents = searchEvents(events, searchTerm);
 
   // Determine range by view
-  let rangeStart: Date;
-  let rangeEnd: Date;
-  if (view === 'week') {
-    const week = getWeekDates(currentDate);
-    rangeStart = week[0];
-    rangeEnd = new Date(week[6].getFullYear(), week[6].getMonth(), week[6].getDate(), 23, 59, 59, 999);
-  } else {
-    rangeStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
-  }
+  const { start: rangeStart, end: rangeEnd } = getViewRange(currentDate, view);
 
   const expanded: Event[] = [];
 
@@ -69,7 +76,7 @@ export function getFilteredEvents(
     const pushIfInRange = (d: Date) => {
       if (d < rangeStart || d > rangeEnd) return;
       if (endLimit && d > endLimit) return;
-      expanded.push({ ...event, id: `${event.id}@${d.toISOString().slice(0, 10)}`, date: d.toISOString().slice(0, 10) });
+      expanded.push({ ...event, id: `${event.id}@${ymd(d)}`, date: ymd(d) });
     };
 
     if (repeat.type === 'none' || interval <= 0) {
