@@ -72,6 +72,7 @@ export default [
       //'no-unused-vars': 'warn',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
+
       // React rules
       'react/prop-types': 'off',
       ...reactHooksPlugin.configs.recommended.rules,
@@ -111,6 +112,8 @@ export default [
     },
     rules: {
       ...vitestPlugin.configs.recommended.rules,
+      // 테스트 파일에서는 any 사용을 허용 (테스트 유연성/모킹 목적)
+      '@typescript-eslint/no-explicit-any': 'off',
       'vitest/expect-expect': 'off',
     },
     languageOptions: {

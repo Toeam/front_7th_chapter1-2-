@@ -83,10 +83,10 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     setEvents((prev) =>
       prev.map((ev) => {
         if (ev.id !== eventId) return ev;
-        const withAny = ev as unknown as { exceptions?: string[] };
-        const exceptions = new Set(withAny.exceptions ?? []);
+        const eventWithExceptions = ev as Event & { exceptions?: string[] };
+        const exceptions = new Set(eventWithExceptions.exceptions ?? []);
         exceptions.add(dateYmd);
-        return { ...ev, exceptions: Array.from(exceptions) } as Event as any;
+        return { ...ev, exceptions: Array.from(exceptions) };
       })
     );
   };
